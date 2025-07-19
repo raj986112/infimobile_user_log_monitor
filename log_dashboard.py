@@ -3,8 +3,6 @@ import pandas as pd
 import streamlit as st
 from sklearn.ensemble import IsolationForest
 from datetime import datetime, timedelta
-from streamlit_toggle import st_toggle_switch
-
 import random
 import os
 import shutil
@@ -22,17 +20,28 @@ if not os.path.exists(DB_NAME):
         raise FileNotFoundError("logs.db not found in project root. Please add it to your repository.")
 
 # -----------------------------------
-# Theme toggle
+# Theme toggle (Native Streamlit)
 # -----------------------------------
-theme_mode = st_toggle_switch(
-    label="🎨 Theme",
-    key="theme",
-    default_value=True,
-    label_after=False,
-    inactive_color="#D3D3D3",
-    active_color="#00FFFF",
-    track_color="#8A2BE2"
-)
+theme_mode = st.radio("🎨 Theme Mode", ["Dark", "Light"], horizontal=True)
+
+if theme_mode == "Dark":
+    st.markdown("""
+        <style>
+        body, .stApp {
+            background-color: #000000;
+            color: #00FF00;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+else:
+    st.markdown("""
+        <style>
+        body, .stApp {
+            background-color: #ffffff;
+            color: #000000;
+        }
+        </style>
+    """, unsafe_allow_html=True)
 
 # -----------------------------------
 # Load logs from DB
@@ -42,7 +51,6 @@ def load_logs():
     try:
         with sqlite3.connect(DB_NAME) as conn:
             df = pd.read_sql_query("SELECT * FROM logs", conn)
-
         df['received_at'] = pd.to_datetime(df['received_at'], errors='coerce')
         df = df.dropna(subset=['received_at'])
         df['user'] = df['user'].fillna('unknown').replace('', 'unknown')
@@ -104,64 +112,6 @@ def insert_dummy_logs():
 # -----------------------------------
 st.set_page_config(page_title="📲 Android App Log Monitor", layout="wide")
 
-st.markdown("""
-    <style>
-    .stApp {
-        background-color: #000000;
-        color: #00FF00;
-        font-family: 'Courier New', monospace;
-    }
-
-    .block-container {
-        background-color: #0a0a0a;
-        padding: 2rem;
-        border-radius: 12px;
-        box-shadow: 0 0 20px #00FF00;
-    }
-
-    .stDataFrame, .stMarkdown, .stMetric, .stTextInput, .stSelectbox, .stDateInput, .stButton, .stDownloadButton {
-        color: #00FF00;
-    }
-
-    .stDataFrame {
-        background-color: #101010;
-        border: 1px solid #00FF00;
-    }
-
-    .stButton > button {
-        background-color: #000000;
-        color: #00FF00;
-        border: 2px solid #00FF00;
-        font-weight: bold;
-        border-radius: 10px;
-        box-shadow: 0 0 10px #00FF00;
-        transition: all 0.3s ease-in-out;
-    }
-
-    .stButton > button:hover {
-        background-color: #00FF00;
-        color: black;
-        transform: scale(1.05);
-    }
-
-    .stMetric label, .stSelectbox label, .stTextInput label {
-        color: #00FF00;
-    }
-
-    .css-1rs6os.edgvbvh3 {
-        background-color: #0a0a0a;
-    }
-
-    h1, h2, h3, h4 {
-        color: #00FF00;
-        text-shadow: 0 0 10px #00FF00;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
-# -----------------------------------
-# Title & Buttons
-# -----------------------------------
 st.markdown("""<h1 style='text-align: center;'>📲 Android App Logs Dashboard</h1>""", unsafe_allow_html=True)
 
 colA, colB = st.columns(2)

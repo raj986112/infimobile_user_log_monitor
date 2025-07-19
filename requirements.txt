@@ -2,11 +2,11 @@ streamlit
 pandas
 scikit-learn
 bcrypt
-streamlit-toggle
 attrs
 async-timeout
 astunparse
 blinker
+
 
 
 
