@@ -3,12 +3,26 @@ import pandas as pd
 import streamlit as st
 from sklearn.ensemble import IsolationForest
 from datetime import datetime, timedelta
-from streamlit_toggle import st_toggle_switch
+from streamlit_toggle_switch import st_toggle_switch
 import random
+import os
+import shutil
 
-DB_NAME = '/home/aryagami/infimobile_user_log_monitor/logs.db'
+# -----------------------------------
+# Setup DB path (Railway-compatible)
+# -----------------------------------
+DB_NAME = '/tmp/logs.db'
 
-# Toggle theme mode
+# Copy prebuilt DB to writable location in Railway
+if not os.path.exists(DB_NAME):
+    if os.path.exists('logs.db'):
+        shutil.copy('logs.db', DB_NAME)
+    else:
+        raise FileNotFoundError("logs.db not found in project root. Please add it to your repository.")
+
+# -----------------------------------
+# Theme toggle
+# -----------------------------------
 theme_mode = st_toggle_switch(
     label="🎨 Theme",
     key="theme",
@@ -19,9 +33,9 @@ theme_mode = st_toggle_switch(
     track_color="#8A2BE2"
 )
 
-# ----------------------------
+# -----------------------------------
 # Load logs from DB
-# ----------------------------
+# -----------------------------------
 @st.cache_data
 def load_logs():
     try:
@@ -36,9 +50,9 @@ def load_logs():
         st.error(f"❌ Error loading logs: {e}")
         return pd.DataFrame()
 
-# ----------------------------
+# -----------------------------------
 # Detect anomalies
-# ----------------------------
+# -----------------------------------
 def detect_anomalies(df):
     df_grouped = df.copy()
     df_grouped["hour"] = df_grouped["received_at"].dt.floor("h")
@@ -50,9 +64,9 @@ def detect_anomalies(df):
     anomalies = grouped[grouped["anomaly"] == -1]
     return grouped, anomalies
 
-# ----------------------------
+# -----------------------------------
 # Insert dummy logs
-# ----------------------------
+# -----------------------------------
 def insert_dummy_logs():
     with sqlite3.connect(DB_NAME) as conn:
         cursor = conn.cursor()
@@ -84,9 +98,9 @@ def insert_dummy_logs():
             ))
         conn.commit()
 
-# ----------------------------
+# -----------------------------------
 # Streamlit UI Setup
-# ----------------------------
+# -----------------------------------
 st.set_page_config(page_title="📲 Android App Log Monitor", layout="wide")
 
 st.markdown("""
@@ -144,8 +158,9 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-
-# Title & Actions
+# -----------------------------------
+# Title & Buttons
+# -----------------------------------
 st.markdown("""<h1 style='text-align: center;'>📲 Android App Logs Dashboard</h1>""", unsafe_allow_html=True)
 
 colA, colB = st.columns(2)
@@ -161,13 +176,17 @@ with colB:
         st.cache_data.clear()
         st.rerun()
 
-# Load logs
+# -----------------------------------
+# Load Logs
+# -----------------------------------
 df_logs = load_logs()
 if df_logs.empty:
     st.warning("⚠️ No logs available.")
     st.stop()
 
-# Keyword search
+# -----------------------------------
+# Search
+# -----------------------------------
 search_keyword = st.text_input("🔍 Search Logs (message/user/device)")
 if search_keyword:
     df_logs = df_logs[
@@ -176,7 +195,9 @@ if search_keyword:
         df_logs['device'].str.contains(search_keyword, case=False, na=False)
     ]
 
-# Filter bar
+# -----------------------------------
+# Filters
+# -----------------------------------
 col1, col2, col3 = st.columns(3)
 with col1:
     types = df_logs["type"].dropna().unique().tolist()
@@ -192,7 +213,9 @@ if selected_type != "ALL":
 if selected_user != "ALL":
     df_logs = df_logs[df_logs["user"] == selected_user]
 
-# Date range filter
+# -----------------------------------
+# Date Range
+# -----------------------------------
 min_date = df_logs["received_at"].min().date()
 max_date = df_logs["received_at"].max().date()
 date_range = st.date_input("📅 Date Range", [min_date, max_date])
@@ -201,11 +224,19 @@ if len(date_range) == 2:
     end_date = pd.to_datetime(date_range[1]) + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)
     df_logs = df_logs[df_logs["received_at"].between(start_date, end_date)]
 
-# Logs Table
+# -----------------------------------
+# Log Table
+# -----------------------------------
 st.subheader("📋 Logs")
-st.dataframe(df_logs[["id", "type", "message", "device", "android_version", "user", "received_at"]].sort_values("received_at", ascending=False), use_container_width=True, height=300)
+st.dataframe(
+    df_logs[["id", "type", "message", "device", "android_version", "user", "received_at"]].sort_values("received_at", ascending=False),
+    use_container_width=True,
+    height=300
+)
 
-# Charts & Anomalies
+# -----------------------------------
+# Charts
+# -----------------------------------
 st.subheader("📈 Log Frequency Over Time")
 grouped_df, anomalies = detect_anomalies(df_logs)
 st.line_chart(grouped_df.set_index("hour")["log_count"])
@@ -214,7 +245,9 @@ if not anomalies.empty:
     st.error("🚨 Anomalies Detected!")
     st.dataframe(anomalies, use_container_width=True)
 
-# Top Devices & Android Versions
+# -----------------------------------
+# Top Devices & Versions
+# -----------------------------------
 col4, col5 = st.columns(2)
 with col4:
     st.subheader("📱 Top Devices")
@@ -226,7 +259,9 @@ with col5:
     top_versions = df_logs.groupby("android_version").size().reset_index(name="count").sort_values("count", ascending=False)
     st.bar_chart(top_versions.set_index("android_version"))
 
-# Export Logs
+# -----------------------------------
+# CSV Export
+# -----------------------------------
 st.subheader("⬇️ Export Logs")
 csv = df_logs.to_csv(index=False).encode("utf-8")
 st.download_button("📥 Download CSV", data=csv, file_name="logs.csv", mime="text/csv")
