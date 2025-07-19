@@ -1,0 +1,11 @@
+id,type,message,device,android_version,timestamp,received_at,user
+49,CLICK,"User clicked 'Recharge'",Phone,13,1752264811990,2025-07-12T01:43:32.033028,
+50,API_ERROR,"Login Failed: Invalid password",Phone,13,1752264813489,2025-07-12T01:43:33.537066,
+51,CLICK,"User clicked 'Recharge'",Phone,13,1752264865304,2025-07-12T01:44:25.337230,
+52,API_ERROR,"Login Failed: Invalid password",Phone,13,1752264866320,2025-07-12T01:44:26.367880,
+53,CLICK,"User clicked 'Recharge'",Phone,13,1752265022234,2025-07-12T01:47:02.279675,
+54,API_ERROR,"Login Failed: Invalid password",Phone,13,1752265024344,2025-07-12T01:47:04.407652,
+55,CLICK,"User clicked 'Recharge'",Phone,13,1752265708801,2025-07-12T01:58:28.820807,
+56,API_ERROR,"Login Failed: Invalid password",Phone,13,1752265710097,2025-07-12T01:58:30.131387,
+57,CLICK,"User clicked 'Recharge'",Phone,13,1752266263520,2025-07-12T02:07:43.533697,
+58,API_ERROR,"Login Failed: Invalid password",Phone,13,1752266264799,2025-07-12T02:07:44.827724,
