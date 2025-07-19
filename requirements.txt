@@ -6,4 +6,5 @@ attrs
 async-timeout
 astunparse
 blinker
+streamlit-toggle
 
