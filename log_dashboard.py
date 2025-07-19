@@ -3,7 +3,8 @@ import pandas as pd
 import streamlit as st
 from sklearn.ensemble import IsolationForest
 from datetime import datetime, timedelta
-from streamlit_toggle_switch import st_toggle_switch
+from streamlit_toggle import st_toggle_switch
+
 import random
 import os
 import shutil
